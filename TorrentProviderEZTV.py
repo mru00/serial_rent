@@ -22,8 +22,6 @@ class TorrentProviderEZTV (TorrentProvider):
       title =  i.a.string
       link = i.a['href']
       series[title] = link
-      #log.info("possible torrent: %s/%s" % (title, link))
-
 
     name = None
     try:
@@ -35,11 +33,10 @@ class TorrentProviderEZTV (TorrentProvider):
 
     cm = difflib.get_close_matches(name, series.keys())
 
-    log.info("after filer: " + repr(cm))
     if len(cm) < 1:
       log.error("series " + name + " not found on eztv")
     s = series[cm[0]]
-    log.info("chosen " + s + " as series name")
+    log.info("chosen %s[%s] as series name" %(cm[0], s))
 
     page = urllib2.urlopen("http://eztv.it" + s)
     soup = BeautifulSoup(page)
@@ -56,11 +53,14 @@ class TorrentProviderEZTV (TorrentProvider):
 
     candidates = episode_descriptor.filter(candidates)
 
+
     if len(candidates) == 0:
-      raise RuntimeError("no torrent for episode '" + str(episode_descriptor) + "' found")
+      log.info("no torrent candidates found")
+      return None
+    log.info("candidate torrents %s" %(candidates,))
 
     episode = score(candidates)
+    log.info("chosen torrent %s" %(episode,))
 
-    print episode
     return episode[1]
 

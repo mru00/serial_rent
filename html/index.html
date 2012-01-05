@@ -2,54 +2,89 @@
   <head>
     <title>serial rent</title>
     <script src="http://code.jquery.com/jquery-latest.js"></script>
-    <script src="jquery.autoSuggest.js"></script>
-    <link rel="stylesheet" type="text/css" href="autoSuggest.css" media="screen"/>
+    <style type="text/css">
+      body {
+        font-family: verdana;
+      }
+      table {
+        border-collapse: collapse;
+      }
+      table,td,th {
+        border: 1px solid black;
+      }
+      td,th {
+        padding: 4px;
+      }
+      tr:nth-child(odd) {
+        background: #EEE;
+      }
+      tr:nth-child(even) {
+        background: #FFF;
+      }
+      .block {
+        border: 1px solid black;
+        margin: 1em;
+        padding: 1em;
+      }
+    </style>
   </head>
   <body>
     <h1>series download manager</h1>
-    <h2>Search for series on thetvdb.com</h2>
-    <form id="form_search"> 
-      <input type="text" id="search_text"/> 
-      <input type="submit"/>
-    </form>
-    <h3>Results</h3>
-    <table>
-      <thead><th>tvdb id</th><th>name</th><th>actions</th></thead>
-      <tbody id="search_results"></tbody>
-    </table>
 
-    <h2>Tasks</h2>
-    <a href="" id="doUpdate">update database</a>
-    <a href="" id="doDownload">download updates</a>
+    <div class="block">
+      <h2>Tasks</h2>
+      <ul>
+        <li><a href="" id="doUpdate">update database</a>
+        <li><a href="" id="doDownload">download updates</a>
+        <li><a href="" id="doMove">move downloaded</a>
+      </ul>
+    </div>
 
-    <h2>Subscriptions</h2>
-    <table>
-      <thead><th>tvdb id</th><th>name</th><th>actions</th></thead>
-      <tbody id="subscriptions"></tbody>
-    </table>
+    <div class="block">
+      <h2>Search for series on thetvdb.com</h2>
+      <form id="form_search"> 
+        <input type="text" id="search_text"/> 
+        <input type="submit" value="Search"/>
+      </form>
 
-    <div id="details">
-      
-    <h3>Details</h3>
+      <div id="div_results">
+        <h3>Results</h3>
+        <table>
+          <thead><th>tvdb id</th><th>name</th><th>actions</th></thead>
+          <tbody id="search_results"></tbody>
+        </table>
+      </div>
+    </div>
 
-    <form id="form_eztv_name">
-      EZTV Name:
-      <input type="text" id="eztv_name"/>
-      <input type="submit"/>
-    </form>
+    <div class="block">
+      <h2>Subscriptions</h2>
+      <table>
+        <thead><th>tvdb id</th><th>name</th><th>actions</th></thead>
+        <tbody id="subscriptions"></tbody>
+      </table>
 
-    <h3>Episodes</h3>
+      <div id="details">
 
+        <h3 id="heading_details">Details</h3>
 
-    <table>
-      <thead><th>season</th><th>episode</th><th>name</th><th>status</th></thead>
-      <tbody id="episodes"></tbody>
-    </table>
+        <form id="form_eztv_name">
+          EZTV Name:
+          <input type="text" id="eztv_name"/>
+          <input type="submit" value="Rename"/>
+        </form>
+
+        <h3>Episodes</h3>
+        <table>
+          <thead><th>season</th><th>episode</th><th>name</th><th>status</th></thead>
+          <tbody id="episodes"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="block">
+      <h2>Log</h2>
+      <ul id="log"></ul>
+
   </div>
-
-    <h2>Log</h2>
-    <ul id="log"></ul>
-
     <script>
 
       function tvdb_link(id) {
@@ -67,11 +102,11 @@
       }
 
       function tr(items) {
-        return '<tr><td>' + items.join('</td><td>') + '</td></tr>';
+        return ' <tr><td>' + items.join('</td><td>') + '</td></tr> ';
       }
 
       function button(title, fun) {
-        return '<a href="" onClick="javascript:'+fun+'; return false;">'+title+'</a>';
+        return ' <a href="" onClick="javascript:'+fun+'; return false;">'+title+'</a> ';
       }
 
       function showDetails(id) {
@@ -86,14 +121,16 @@
           function onRecvEpisodes(data) {
             var items = [];
             $.each(data, function(key, val) {
-              items.push(tr([val.season_number, val.episode_number, val.name, val.state]));
+              items.push(tr([val.season_number, val.episode_number, val.episode_name, val.state]));
             });
             $("#episodes").html(items.join(''));
           };
-          function onRecvEZTV(data) {
+          $.getJSON('/subscription/' + id + '/eztv_name', function(data) {
             $("#eztv_name").val(data);
-          };
-          $.getJSON('/subscription/' + id + '/eztv_name', onRecvEZTV);
+          });
+          $.getJSON('/subscription/' + id + '/series_name', function(data) {
+            $("#heading_details").html('Details for ' + data + button('x', 'showDetails(null)'));
+          });
           $.getJSON('/subscription/' + id + '/episodes', onRecvEpisodes);
         }
       }
@@ -110,7 +147,7 @@
           var items = [];
           $.each(data, function(key, val) {
             id = val.tvdb_series;
-            items.push(tr([id, button(val.name, 'showDetails('+id+')'), button('remove', 'removeSubscription('+id+')'), tvdb_link(id)]));
+            items.push(tr([id, button(val.series_name, 'showDetails('+id+')'), button('remove', 'removeSubscription('+id+')') + tvdb_link(id)]));
           });
           $("#subscriptions").html(items.join(''));
         };
@@ -128,9 +165,10 @@
       function onRecvResults(data) {
         var items = [];
         $.each(data, function(key, val) {
-          items.push(tr([val.id, val.name, button('add', 'onAddSubscription('+val.id+');'), tvdb_link(val.id)]));
+          items.push(tr([val.id, val.name, button('add', 'onAddSubscription('+val.id+');') + tvdb_link(val.id)]));
         });
         $("#search_results").html(items.join(''));
+        $("#div_results").show();
       }
 
 
@@ -158,6 +196,11 @@
           return false;
         });
 
+        $("#doMove").click(function() {
+          showDetails(null);
+          $.getJSON('/updates/move', function(data) {});
+          return false;
+        });
         $("#doDownload").click(function() {
           showDetails(null);
           $.getJSON('/updates/download', function(data) {});
@@ -169,6 +212,7 @@
         updateLog();
         getSubscriptions();
 
+        $('#div_results').hide();
       });
 
     </script>

@@ -14,9 +14,9 @@ def get_db():
      if not exists 
       series
       (tvdb_series text,
-       name text,
+       series_name text,
        eztv_name text,
-       added timestamp DEFAULT CURRENT_TIMESTAMP, 
+       series_added timestamp DEFAULT CURRENT_TIMESTAMP, 
        PRIMARY KEY(tvdb_series)
       )
     ''');
@@ -29,10 +29,10 @@ def get_db():
         tvdb_episode integer,
         season_number integer,
         episode_number integer,
-        name text,
+        episode_name text,
         torrent_name text,
         filename text, 
-        added timestamp DEFAULT CURRENT_TIMESTAMP,
+        episode_added timestamp DEFAULT CURRENT_TIMESTAMP,
         state text DEFAULT "new",
         PRIMARY KEY(tvdb_series, tvdb_episode)
        )

@@ -52,7 +52,7 @@ class DownloadProviderDeluge (DownloadProvider):
 
       def on_connect_success(result):
         log.info("connection successful: " + repr(result))
-        home = '/home/mru/06multimedia/serial_rent/'
+        home = '/home/mru/dev/06multimedia/serial_rent/'
         c = client.core.add_torrent_magnet(fn, 
             {
               'download_location':home+'torrents',

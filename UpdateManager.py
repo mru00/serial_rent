@@ -3,6 +3,10 @@ import SubscriptionManager
 import tvdb
 import DownloadProvider, TorrentProvider
 from EpisodeDescriptor import SimpleEpisodeDescriptor
+from Shelver import get_file
+import os
+import shutil
+from traceback import format_exc
 
 
 log = logging.getLogger('UpdateManager')
@@ -27,7 +31,7 @@ class UpdateManager():
 
     for series in self.subs.get_series():
       for episode in self.subs.get_episodes(series['tvdb_series']):
-        series_name = series['name']
+        series_name = series['series_name']
         season_number = episode['season_number']
         episode_number = episode['episode_number']
 
@@ -41,6 +45,8 @@ class UpdateManager():
 
           try:
             magnet = to.getTorrent(ds)
+            if not magnet:
+              raise RuntimeError("episode not found: " + str(ds))
           except Exception as ex:
             self.subs.update_episode_state(episode['tvdb_series'], 
                 episode['tvdb_episode'], 
@@ -61,9 +67,58 @@ class UpdateManager():
 
         except Exception as ex:
 
-          log.warn("failed to enqueue %s/%s/%s: %s" % (series_name, season_number, episode_number, repr(ex)))
+          log.warn("failed to enqueue %s/%s/%s: %s" % (series_name, season_number, episode_number, format_exc(ex)))
 
 
+  def move_downloaded(self):
+
+    log.info("move_downloaded")
+    dl = DownloadProvider.getProvider()
+    to = TorrentProvider.getProvider()
+
+    for series in self.subs.get_series():
+      for episode in self.subs.get_episodes(series['tvdb_series']):
+        series_name = series['series_name']
+        season_number = episode['season_number']
+        episode_number = episode['episode_number']
+
+        if episode['state'] != "enqueued":
+          continue
+
+        ds = SimpleEpisodeDescriptor(series_name, 
+              int(season_number), 
+              int(episode_number), series)
+        try:
+
+          f = get_file(ds)
+
+          if len(f) == 1:
+            log.info("found file for %s: %s" %(str(ds), repr(f)))
+          else:
+            raise RuntimeError("file not found")
+
+
+          f = f[0]
+
+          targetdir = '/home/mru/dev/06multimedia/serial_rent/torrents/done/'
+          try:
+            os.makedirs(targetdir)
+          except Exception as ex:
+            log.warn(repr(ex))
+
+          log.info("created directory")
+          src = os.path.join(f[1], f[0])
+          dst = os.path.join(targetdir, ds.get_file_name())
+          log.info("moving file %s to %s" % (src, dst))
+          shutil.move(src, dst)
+
+          self.subs.update_episode_state(episode['tvdb_series'], 
+              episode['tvdb_episode'], 
+              "done")
+
+        except Exception as ex:
+
+          log.warn("failed to find file for %s/%s/%s: %s" % (series_name, season_number, episode_number, format_exc(ex)))
 
 def getUpdateManager():
   return UpdateManager()

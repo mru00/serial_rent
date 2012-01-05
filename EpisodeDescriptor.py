@@ -9,6 +9,13 @@ class SimpleEpisodeDescriptor (EpisodeDescriptor):
     self.episode_number = episode_number
     self.meta = meta
 
+  def get_file_name(self):
+    return "%s S%02dE%02d %s.extension" % (self.series_name, self.season_number, self.episode_number, "episodename")
+
+  def get_query_string(self):
+
+    return "%s S%02dE%02d" % (self.series_name, self.season_number, self.episode_number)
+
   def filter(self, candidates):
 
     def f1(title):
@@ -22,6 +29,11 @@ class SimpleEpisodeDescriptor (EpisodeDescriptor):
 
     return filter(lambda (t,l): f1(t), candidates)
 
+
   def __str__(self):
-    return "descriptor for %s[eztv:%s] / %d / %d" % (self.series_name, self.meta['eztv_name'], self.season_number, self.episode_number)
+    try:
+      ez = self.meta['eztv_name']
+    except:
+      ez = ''
+    return "%s[eztv:%s] / %d / %d" % (self.series_name, ez, self.season_number, self.episode_number)
 

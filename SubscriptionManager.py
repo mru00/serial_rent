@@ -1,6 +1,5 @@
 import re
 import logging
-import sqlite3
 import tvdb
 import Db
 
@@ -30,7 +29,7 @@ class SubscriptionManager:
 
     self.db.execute('''
     insert into series 
-    (tvdb_series, name, eztv_name)
+    (tvdb_series, series_name, eztv_name)
     VALUES
     (?,?,?)''' ,(tvdb_key,meta['name'], re.sub('[tT]he (.*)', r'\1, The', meta['name'])))
     self.db.commit()
@@ -41,7 +40,7 @@ class SubscriptionManager:
         meta = tvdb.get_episode(tvdb_episode)
       self.db.execute('''
       insert into episodes
-      (tvdb_series, tvdb_episode, name, season_number, episode_number)
+      (tvdb_series, tvdb_episode, episode_name, season_number, episode_number)
       VALUES
       (?,?,?,?,?)''', (tvdb_series, tvdb_episode, meta['name'], meta['season_number'], meta['episode_number'] ) )
       self.db.commit()
@@ -83,7 +82,9 @@ class SubscriptionManager:
 
   def get_episodes(self, series):
     return map(self._make_dict, self.db.execute('''
-    select * from episodes where tvdb_series = ?
+    select * from episodes
+    NATURAL JOIN series
+    where tvdb_series = ? 
     ORDER BY season_number ASC, episode_number ASC
     ''', (series,)))
 

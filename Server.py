@@ -1,3 +1,8 @@
+import logging
+logging.basicConfig(level=logging.DEBUG)
+
+
+
 import web
 import json
 from mimerender import mimerender
@@ -6,7 +11,7 @@ from tvdb import get_series
 from Db import get_db
 from UpdateManager import getUpdateManager
 
-
+log = logging.getLogger("Server")
 
 render_xml = lambda message: '<message>%s</message>'%message
 render_json = lambda **args: json.dumps(args)
@@ -19,9 +24,10 @@ urls = (
     '/subscription/(\w+)/episodes', 'subscription_episodes',
     '/subscription/(\w+)/(\w+)/?(.*)', 'subscription_detail',
     '/search/(.*)', 'search',
-    '/log', 'log',
+    '/log', 'logg',
     '/updates', 'updates',
     '/updates/download', 'updates_download',
+    '/updates/move', 'updates_move',
     '/html/(.*)', 'html'
 )
 app = web.application(urls, globals())
@@ -71,7 +77,14 @@ class updates_download:
     up.download_new()
     return json.dumps(None)
 
-class log:
+class updates_move:
+  def GET(self):
+    log.warning("update_move")
+    up = getUpdateManager()
+    up.move_downloaded()
+    return json.dumps(None)
+
+class logg:
   def GET(self):
     db = get_db()
     return json.dumps([ x for x in db.execute('SELECT * FROM debug') ])
@@ -80,5 +93,6 @@ class html:
     if not name:
       name = 'index.html'
     return open("html/" + name).read()
+
 if __name__ == "__main__":
     app.run()

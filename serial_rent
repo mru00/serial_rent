@@ -1,25 +1,8 @@
 #! /usr/bin/env python
-import logging
-logging.basicConfig(level = logging.DEBUG)
-import DownloadProvider, TorrentProvider
-from EpisodeDescriptor import EpisodeDescriptor, SimpleEpisodeDescriptor
-import SubscriptionManager
 
 
+from Server import app
 
 
-d = DownloadProvider.getProvider("deluge")
-t = TorrentProvider.getProvider("EZTV")
-s = SubscriptionManager.getSubscriptionManager()
-
-#d.enqueue(r"http://torrents.thepiratebay.org/3375794/asdfasf.3375794.TPB.torrent")
-
-
-magnet = t.getTorrent(SimpleEpisodeDescriptor("american dad", 6, 2))
-magnet = t.getTorrent(SimpleEpisodeDescriptor("futurama", 6, 2))
-magnet = t.getTorrent(SimpleEpisodeDescriptor("breaking bad", 1, 2))
-magnet = t.getTorrent(SimpleEpisodeDescriptor("the walking dead", 1, 2))
-magnet = t.getTorrent(SimpleEpisodeDescriptor("the office (US)", 6, 2))
-#d.enqueue(magnet)
-
+app.run()
 
