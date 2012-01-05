@@ -5,6 +5,7 @@ import DownloadProvider, TorrentProvider
 from EpisodeDescriptor import SimpleEpisodeDescriptor
 from Shelver import get_file
 import os
+import Db
 import shutil
 from traceback import format_exc
 
@@ -100,7 +101,7 @@ class UpdateManager():
 
           f = f[0]
 
-          targetdir = '/home/mru/dev/06multimedia/serial_rent/torrents/done/'
+          targetdir = Db.get_config('completed_dir')
           try:
             os.makedirs(targetdir)
           except Exception as ex:

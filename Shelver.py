@@ -3,12 +3,11 @@ import re
 import os
 import os.path
 from SubscriptionManager import getSubscriptionManager
+import Db
 
 log = logging.getLogger("Shelver")
 
-download_dir = '/home/mru/dev/06multimedia/serial_rent/torrents'
-download_dir = '/home/mru/Downloads/torrentz/test'
-download_dir = '/home/mru/06multimedia/serial_rent/torrents'
+download_dir = Db.get_config('download_dir') 
 
 def get_file(episode_descriptor):
 

@@ -1,6 +1,7 @@
 import logging
 from DownloadProvider import DownloadProvider
 from multiprocessing import Process, Queue
+import Db
 
 log = logging.getLogger("DownloadProviderDeluge")
 
@@ -55,7 +56,7 @@ class DownloadProviderDeluge (DownloadProvider):
         home = '/home/mru/dev/06multimedia/serial_rent/'
         c = client.core.add_torrent_magnet(fn, 
             {
-              'download_location':home+'torrents',
+              'download_location':Db.get_config('download_dir'),
               #'move_on_completed': true,
               #'move_on_completed_path': home+'torrents_done'
               })

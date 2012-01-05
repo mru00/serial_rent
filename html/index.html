@@ -41,6 +41,20 @@
     </div>
 
     <div class="block">
+      <h2>Config</h2>
+      <form id="form_download_dir">
+        Download dir:
+        <input type="text" id="download_dir"/>
+        <input type="submit" value="Set"/>
+      </form>
+      <form id="form_completed_dir">
+        Completed dir:
+        <input type="text" id="completed_dir"/>
+        <input type="submit" value="set"/>
+      </form>
+    </div>
+
+    <div class="block">
       <h2>Search for series on thetvdb.com</h2>
       <form id="form_search"> 
         <input type="text" id="search_text"/> 
@@ -155,6 +169,14 @@
         $.getJSON('/subscription', onRecvSubs);
       }
 
+      function getConfig() {
+        $.getJSON('/config/download_dir', function(data) {
+          $('#download_dir').val(data);
+        });
+        $.getJSON('/config/completed_dir', function(data) {
+            $('#completed_dir').val(data);
+        });
+      }
       function onAddSubscription(id) {
         $.ajax({
           url: '/subscription/'+id, 
@@ -190,6 +212,20 @@
           return false;
         });
 
+
+        var config_forms = ["download_dir", "completed_dir"];
+
+        $.each(config_forms, function(key, value) {
+          $("#form_"+value).submit(function() {
+            var query = $("#"+value).val();
+            $.ajax({
+              'url':'/config/'+value+'/' + encodeURIComponent(query),
+              'type':'POST'
+            });
+            return false;
+          });
+        });
+
         $("#doUpdate").click(function() {
           showDetails(null);
           $.getJSON('/updates', function(data) {});
@@ -211,6 +247,7 @@
         window.setInterval(updateLog, 10000);
         updateLog();
         getSubscriptions();
+        getConfig();
 
         $('#div_results').hide();
       });

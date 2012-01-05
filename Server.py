@@ -9,7 +9,9 @@ from mimerender import mimerender
 from SubscriptionManager import getSubscriptionManager
 from tvdb import get_series
 from Db import get_db
+import Db
 from UpdateManager import getUpdateManager
+import urllib
 
 log = logging.getLogger("Server")
 
@@ -19,16 +21,18 @@ render_html = lambda message: '<html><body>%s</body></html>'%message
 render_txt = lambda message: message
 
 urls = (
-    '/subscription', 'subscriptions',
-    '/subscription/(\w+)', 'subscription',
-    '/subscription/(\w+)/episodes', 'subscription_episodes',
-    '/subscription/(\w+)/(\w+)/?(.*)', 'subscription_detail',
-    '/search/(.*)', 'search',
-    '/log', 'logg',
-    '/updates', 'updates',
-    '/updates/download', 'updates_download',
-    '/updates/move', 'updates_move',
-    '/html/(.*)', 'html'
+    r'/subscription', 'subscriptions',
+    r'/subscription/(\w+)', 'subscription',
+    r'/subscription/(\w+)/episodes', 'subscription_episodes',
+    r'/subscription/(\w+)/(\w+)/?(.*)', 'subscription_detail',
+    r'/search/(.*)', 'search',
+    r'/log', 'logg',
+    r'/updates', 'updates',
+    r'/updates/download', 'updates_download',
+    r'/updates/move', 'updates_move',
+    r'/config/(\w+)', 'config_get',
+    r'/config/(\w+)/(.+)', 'config_post',
+    r'/html/(.*)', 'html'
 )
 app = web.application(urls, globals())
 
@@ -82,6 +86,16 @@ class updates_move:
     log.warning("update_move")
     up = getUpdateManager()
     up.move_downloaded()
+    return json.dumps(None)
+
+class config_get:
+  def GET(self, key):
+    log.info("get config: " + key)
+    return json.dumps(Db.get_config(key))
+
+class config_post:
+  def POST(self, key, value):
+    Db.set_config(key, urllib.unquote(value))
     return json.dumps(None)
 
 class logg:
