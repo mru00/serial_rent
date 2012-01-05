@@ -1,4 +1,8 @@
 import logging
+if __name__ == "__main__":
+  logging.basicConfig(level = logging.DEBUG)
+
+
 from DownloadProvider import DownloadProvider
 from multiprocessing import Process, Queue
 import Db
@@ -32,33 +36,57 @@ class DownloadProviderDeluge (DownloadProvider):
 
   def enqueue(self, fn):
 
+    download_dir = Db.get_config("download_dir")
+    completed_dir = Db.get_config("completed_dir")
+    
+    # TODO: mkdir completed, download
+
+    print "dl: ", download_dir
+    print "cm: ", completed_dir
+
     def run(reactor, fn):
+      global new_id
+
       log.info("should download " + str(fn))
       d = client.connect()
       reactor.resi = 5
+      result = 5
+      new_id = 5
+
+
+      def on_set_1(new_id, result):
+        c = client.core.set_torrent_move_completed(new_id, True)
+        c.addCallback(lambda a:on_set_2(new_id, a))
+        c.addErrback(on_add_fail)
+
+      def on_set_2(new_id, result):
+        client.disconnect()
+        reactor.stop()
+      
 
       def on_add_success(result):
         if not result:
           log.info("add torrent successful, was already enqueued")
+          client.disconnect()
+          reactor.stop()
         else:
+          new_id = result
+          c = client.core.set_torrent_move_completed_path(result, completed_dir)
+          c.addCallback(lambda a: on_set_1(result, a))
+          c.addErrback(on_add_fail)
           log.info("added new torrent: " + repr(result))
-        reactor.resi = result
-        client.disconnect()
-        reactor.stop()
+        new_id=None
 
       def on_add_fail(result):
-        log.info("add torrent failed: " + repr(result))
+        log.info("add torrent failed: " + repr(result) + str(result))
         client.disconnect()
         reactor.stop()
 
       def on_connect_success(result):
         log.info("connection successful: " + repr(result))
-        home = '/home/mru/dev/06multimedia/serial_rent/'
         c = client.core.add_torrent_magnet(fn, 
             {
-              'download_location':Db.get_config('download_dir'),
-              #'move_on_completed': true,
-              #'move_on_completed_path': home+'torrents_done'
+              'download_location':download_dir,
               })
 
         c.addCallback(on_add_success)
@@ -70,7 +98,7 @@ class DownloadProviderDeluge (DownloadProvider):
 
       d.addCallback(on_connect_success)
       d.addErrback(on_connect_fail)
-      return reactor.resi
+      return new_id
  
     res = _run_deluge(run, fn)
     print "result:", res
@@ -81,3 +109,8 @@ class DownloadProviderDeluge (DownloadProvider):
     _run_deluge(_get_status, deluge_id)
 
 
+if __name__ == "__main__":
+  print "downloading"
+  logging.basicConfig(level=logging.DEBUG)
+  dl = DownloadProviderDeluge()
+  dl.enqueue('magnet:?xt=urn:btih:MMOWXONNO7AKGQRGGNNW4KEP3FEWZTTR&dn=Boardwalk.Empire.S01E01.Boardwalk.Empire.HDTV.XviD-FQM&tr=http://tracker.openbittorrent.com/announce')

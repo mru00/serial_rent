@@ -42,12 +42,14 @@ def update_schema(db):
     CREATE TABLE 
      config
       (download_dir text, 
-       completed_dir text
+       completed_dir text, 
+       sorted_dir text
       )''')
 
     db.execute('''
     INSERT INTO config
-    VALUES (NULL, NULL)
+    (download_dir)
+    VALUES (NULL)
     ''')
 
 

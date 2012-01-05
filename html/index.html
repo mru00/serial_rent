@@ -45,11 +45,16 @@
       <form id="form_download_dir">
         Download dir:
         <input type="text" id="download_dir"/>
-        <input type="submit" value="Set"/>
+        <input type="submit" value="set"/>
       </form>
       <form id="form_completed_dir">
         Completed dir:
         <input type="text" id="completed_dir"/>
+        <input type="submit" value="set"/>
+      </form>
+      <form id="form_sorted_dir">
+        Sorted dir:
+        <input type="text" id="sorted_dir"/>
         <input type="submit" value="set"/>
       </form>
     </div>
@@ -169,14 +174,6 @@
         $.getJSON('/subscription', onRecvSubs);
       }
 
-      function getConfig() {
-        $.getJSON('/config/download_dir', function(data) {
-          $('#download_dir').val(data);
-        });
-        $.getJSON('/config/completed_dir', function(data) {
-            $('#completed_dir').val(data);
-        });
-      }
       function onAddSubscription(id) {
         $.ajax({
           url: '/subscription/'+id, 
@@ -213,7 +210,7 @@
         });
 
 
-        var config_forms = ["download_dir", "completed_dir"];
+        var config_forms = ["download_dir", "completed_dir", "sorted_dir"];
 
         $.each(config_forms, function(key, value) {
           $("#form_"+value).submit(function() {
@@ -223,6 +220,9 @@
               'type':'POST'
             });
             return false;
+          });
+          $.getJSON('/config/'+value, function(data) {
+            $('#'+value).val(data);
           });
         });
 
@@ -247,7 +247,6 @@
         window.setInterval(updateLog, 10000);
         updateLog();
         getSubscriptions();
-        getConfig();
 
         $('#div_results').hide();
       });

@@ -101,7 +101,7 @@ class UpdateManager():
 
           f = f[0]
 
-          targetdir = Db.get_config('completed_dir')
+          targetdir = Db.get_config('sorted_dir')
           try:
             os.makedirs(targetdir)
           except Exception as ex:
