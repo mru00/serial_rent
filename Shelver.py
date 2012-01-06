@@ -7,10 +7,9 @@ import Db
 
 log = logging.getLogger("Shelver")
 
-download_dir = Db.get_config('download_dir') 
-
 def get_file(episode_descriptor):
 
+  download_dir = Db.get_config('download_dir') 
   filelist = []
   for (a,b,c) in os.walk(download_dir):
     for f in c:

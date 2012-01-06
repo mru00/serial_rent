@@ -102,6 +102,7 @@ class UpdateManager():
           f = f[0]
 
           targetdir = Db.get_config('sorted_dir')
+          targetdir = os.path.join(targetdir, series_name, "Season %d" %(season_number,))
           try:
             os.makedirs(targetdir)
           except Exception as ex:

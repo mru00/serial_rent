@@ -1,5 +1,4 @@
 import logging
-logging.basicConfig(level=logging.DEBUG)
 
 
 
@@ -109,4 +108,5 @@ class html:
     return open("html/" + name).read()
 
 if __name__ == "__main__":
-    app.run()
+  logging.basicConfig(level=logging.DEBUG)
+  app.run()

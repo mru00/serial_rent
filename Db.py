@@ -134,8 +134,9 @@ class SQLiteHandler(logging.Handler): # Inherit from logging.Handler
         self.db.commit()
 
 
-logging.basicConfig()
-#logging.getLogger().addHandler(SQLiteHandler())
+if __name__ == "__main__":
+  logging.basicConfig()
+  #logging.getLogger().addHandler(SQLiteHandler())
 
 
 

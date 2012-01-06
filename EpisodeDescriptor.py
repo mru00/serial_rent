@@ -10,7 +10,14 @@ class SimpleEpisodeDescriptor (EpisodeDescriptor):
     self.meta = meta
 
   def get_file_name(self):
-    return "%s S%02dE%02d %s.extension" % (self.series_name, self.season_number, self.episode_number, "episodename")
+    if self.meta and 'episode_name' in self.meta.keys():
+      en = self.meta['episode_name']
+    else:
+      en = ''
+
+    extension = "avi"
+
+    return "%s S%02dE%02d %s.%s" % (self.series_name, self.season_number, self.episode_number, en, extension)
 
   def get_query_string(self):
 
