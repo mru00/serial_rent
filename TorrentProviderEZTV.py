@@ -23,13 +23,7 @@ class TorrentProviderEZTV (TorrentProvider):
       link = i.a['href']
       series[title] = link
 
-    name = None
-    try:
-      name = episode_descriptor.meta['eztv_name']
-    except Exception as ex:
-      name = episode_descriptor.series_name
-      log.info("no eztv name for %s, error: %s" %(episode_descriptor.series_name, repr(ex)))
-
+    name = episode_descriptor.meta('eztv_name', episode_descriptor.series_name)
 
     cm = difflib.get_close_matches(name, series.keys())
 
