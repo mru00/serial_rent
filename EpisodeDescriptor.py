@@ -24,6 +24,7 @@ class SimpleEpisodeDescriptor (EpisodeDescriptor):
   def get_file_name(self, extension = "avi"):
     return clean_fn("%s S%02dE%02d %s.%s" % (self.series_name, self.season_number, self.episode_number, self.meta('episode_name', ''), extension))
 
+
   def get_query_string(self):
 
     return "%s S%02dE%02d" % (self.series_name, self.season_number, self.episode_number)
