@@ -9,7 +9,7 @@ log = logging.getLogger("Shelver")
 
 def get_file(episode_descriptor):
 
-  download_dir = Db.get_config('download_dir') 
+  download_dir = Db.get_config('completed_dir') 
   filelist = []
   for (a,b,c) in os.walk(download_dir):
     for f in c:
