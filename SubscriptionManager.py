@@ -1,3 +1,11 @@
+
+# The SubscriptionManager provides an interface to 
+# the data stored in the database
+#
+# In future, it should also manage the notifications (new episode, download completed, ...)
+
+
+
 import re
 import logging
 import tvdb

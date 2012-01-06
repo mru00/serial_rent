@@ -1,9 +1,17 @@
+
+# this module provides the methods to
+#  * search for new torrents
+#  * download those torrents
+#  * move the files to get a nice sorted file archive
+#
+# this means that basically this module glues everything together
+
 import logging
 import SubscriptionManager
 import tvdb
 import DownloadProvider, TorrentProvider
 from EpisodeDescriptor import SimpleEpisodeDescriptor
-from Shelver import get_file
+from Shelver import get_file, clean_fn
 import os
 import Db
 import shutil
@@ -11,7 +19,6 @@ from traceback import format_exc
 
 
 log = logging.getLogger('UpdateManager')
-
 
 class UpdateManager():
   def __init__(self):
@@ -42,7 +49,7 @@ class UpdateManager():
         try:
           ds = SimpleEpisodeDescriptor(series_name, 
               int(season_number), 
-              int(episode_number), series)
+              int(episode_number), episode)
 
           try:
             magnet = to.getTorrent(ds)
@@ -88,7 +95,7 @@ class UpdateManager():
 
         ds = SimpleEpisodeDescriptor(series_name, 
               int(season_number), 
-              int(episode_number), series)
+              int(episode_number), episode)
         try:
 
           f = get_file(ds)
@@ -99,18 +106,19 @@ class UpdateManager():
             raise RuntimeError("file not found")
 
 
+          # pick first element of result array as file.
+          # result will contain only one element anyhow
           f = f[0]
 
           targetdir = Db.get_config('sorted_dir')
-          targetdir = os.path.join(targetdir, series_name, "Season %d" %(season_number,))
-          try:
+          targetdir = os.path.join(targetdir, clean_fn(series_name), "Season %d" %(season_number,))
+          if not os.path.isdir(targetdir):
             os.makedirs(targetdir)
-          except Exception as ex:
-            log.warn(repr(ex))
 
           log.info("created directory")
+          extension = os.path.splitext(f[0])[1][1:]
           src = os.path.join(f[1], f[0])
-          dst = os.path.join(targetdir, ds.get_file_name())
+          dst = os.path.join(targetdir, ds.get_file_name(extension))
           log.info("moving file %s to %s" % (src, dst))
           shutil.move(src, dst)
 

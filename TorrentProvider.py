@@ -1,4 +1,8 @@
 
+# base class for torrent providers.
+# a torrent provider is a torrent tracker like 'the pirate bay', ...
+
+
 class TorrentProvider():
   def getTorrent(self, what):
     raise RuntimeError("subclass TorrentProvider")

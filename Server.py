@@ -1,3 +1,6 @@
+
+# html and rest interface, glueing everything together
+
 import logging
 
 
@@ -31,7 +34,8 @@ urls = (
     r'/updates/move', 'updates_move',
     r'/config/(\w+)', 'config_get',
     r'/config/(\w+)/(.+)', 'config_post',
-    r'/html/(.*)', 'html'
+    r'/html/(.*)', 'html',
+    r'/', 'redirect'
 )
 app = web.application(urls, globals())
 
@@ -60,8 +64,9 @@ class subscription_episodes:
 class subscription_detail:
   def GET(self, sub, field, value):
     return json.dumps(getSubscriptionManager().get_series_details(sub)[field])
+
   def POST(self, sub, field, value):
-    getSubscriptionManager().set_series_detail(sub, field, value)
+    getSubscriptionManager().set_series_detail(sub, field, urllib.unquote(value))
     return json.dumps(None)
 
 class search:
@@ -96,6 +101,11 @@ class config_post:
   def POST(self, key, value):
     Db.set_config(key, urllib.unquote(value))
     return json.dumps(None)
+
+class redirect:
+  def GET(self):
+    raise web.seeother('/html/index.html')
+
 
 class logg:
   def GET(self):

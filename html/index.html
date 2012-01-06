@@ -44,17 +44,17 @@
       <h2>Config</h2>
       <form id="form_download_dir">
         Download dir:
-        <input type="text" id="download_dir"/>
+        <input type="text" width="80" id="download_dir"/>
         <input type="submit" value="set"/>
       </form>
       <form id="form_completed_dir">
         Completed dir:
-        <input type="text" id="completed_dir"/>
+        <input type="text" width="35" id="completed_dir"/>
         <input type="submit" value="set"/>
       </form>
       <form id="form_sorted_dir">
         Sorted dir:
-        <input type="text" id="sorted_dir"/>
+        <input type="text" width="35" id="sorted_dir"/>
         <input type="submit" value="set"/>
       </form>
     </div>
@@ -78,7 +78,7 @@
     <div class="block">
       <h2>Subscriptions</h2>
       <table>
-        <thead><th>tvdb id</th><th>name</th><th>actions</th></thead>
+        <thead><th>tvdb id</th><th>name</th><th>actions</th><th>details</th></thead>
         <tbody id="subscriptions"></tbody>
       </table>
 
@@ -94,7 +94,7 @@
 
         <h3>Episodes</h3>
         <table>
-          <thead><th>season</th><th>episode</th><th>name</th><th>status</th></thead>
+          <thead><th>season</th><th>episode</th><th>name</th><th>status</th><th>actions</th><th>details</th></thead>
           <tbody id="episodes"></tbody>
         </table>
       </div>
@@ -128,6 +128,10 @@
         return ' <a href="" onClick="javascript:'+fun+'; return false;">'+title+'</a> ';
       }
 
+      function toggleDetails(id) {
+        $("#episode_details_" + id).toggle();
+      }
+
       function showDetails(id) {
         if (id == null) {
           $("#episodes").html('');
@@ -136,14 +140,29 @@
         }
         else {
           $("#details").show();
+
           $.current_series = id;
           function onRecvEpisodes(data) {
             var items = [];
             $.each(data, function(key, val) {
-              items.push(tr([val.season_number, val.episode_number, val.episode_name, val.state]));
+              details = []
+              for (var key in val) { details.push(tr([key, val[key]])); }
+
+              items.push(tr([val.season_number, 
+              val.episode_number, 
+              val.episode_name, 
+              val.state, 
+              button('reset', 'resetEpisode('+val.tvdb_episode+')'),
+              button('toggle', 'toggleDetails('+val.tvdb_episode+')') + 
+              '<table id="episode_details_'+val.tvdb_episode+'" style="display:none;">'+details.join('')+'</table>'
+              ]));
             });
             $("#episodes").html(items.join(''));
+
+            var container = $("html");
+            container.scrollTop($("#details").offset().top - container.offset().top + container.scrollTop());
           };
+
           $.getJSON('/subscription/' + id + '/eztv_name', function(data) {
             $("#eztv_name").val(data);
           });
@@ -165,8 +184,15 @@
         function onRecvSubs(data) {
           var items = [];
           $.each(data, function(key, val) {
+            details = []
+            for (var key in val) { details.push(tr([key, val[key]])); }
             id = val.tvdb_series;
-            items.push(tr([id, button(val.series_name, 'showDetails('+id+')'), button('remove', 'removeSubscription('+id+')') + tvdb_link(id)]));
+            items.push(tr([id, 
+            button(val.series_name, 'showDetails('+id+')'), 
+            button('remove', 'removeSubscription('+id+')') + tvdb_link(id),
+              button('toggle', 'toggleDetails('+val.tvdb_episode+')') + 
+              '<table id="episode_details_'+val.tvdb_episode+'" style="display:none;">'+details.join('')+'</table>'
+            ]));
           });
           $("#subscriptions").html(items.join(''));
         };
@@ -194,13 +220,13 @@
       $(document).ready( function() {
 
         $("#form_search").submit(function() {
-          var query = $("#search_text").val();
+          var query = encodeURIComponent($("#search_text").val());
           $.getJSON('/search/' + query, onRecvResults);
           return false;
         });
 
         $("#form_eztv_name").submit(function() {
-          var query = $("#eztv_name").val();
+          var query = encodeURIComponent($("#eztv_name").val());
           var id = $.current_series;
           $.ajax({
             'url':'/subscription/' + id + '/eztv_name/' + query,
@@ -214,9 +240,9 @@
 
         $.each(config_forms, function(key, value) {
           $("#form_"+value).submit(function() {
-            var query = $("#"+value).val();
+            var query = encodeURIComponent($("#"+value).val());
             $.ajax({
-              'url':'/config/'+value+'/' + encodeURIComponent(query),
+              'url':'/config/'+value+'/' + query,
               'type':'POST'
             });
             return false;

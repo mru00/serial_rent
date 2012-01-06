@@ -1,3 +1,8 @@
+
+# This module handles the database.
+# Database updates, initial table creation, accessor methods are defined here
+
+
 import logging
 import sqlite3
 import time
@@ -71,9 +76,14 @@ def update_schema(db):
 
 
 def get_db():
-    db =sqlite3.connect('subscriptions.db')
-    db.row_factory =sqlite3.Row
-  
+  db =sqlite3.connect('subscriptions.db')
+  db.row_factory =sqlite3.Row
+  return db
+ 
+
+
+def initially():
+    db = get_db()
     db.execute('''
     CREATE TABLE 
      IF NOT EXISTS
@@ -92,9 +102,6 @@ def get_db():
 
     db.commit()
     update_schema(db)
-
-
-    return db
 
 def as_dict(rows):
   def _md(row):
@@ -132,6 +139,9 @@ class SQLiteHandler(logging.Handler): # Inherit from logging.Handler
         print record.getMessage()
         self.db.execute('INSERT INTO debug(date, loggername, srclineno, func, level, msg) VALUES(?,?,?,?,?,?)', (thisdate, record.name, record.lineno, record.funcName, record.levelname, record.msg))
         self.db.commit()
+
+
+initially()
 
 
 if __name__ == "__main__":

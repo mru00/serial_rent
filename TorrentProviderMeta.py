@@ -1,3 +1,10 @@
+
+"""
+TorrentProvider that uses other torrent providers to
+search for a torrent.
+"""
+
+
 from TorrentProvider import TorrentProvider
 from TorrentProviderEZTV import TorrentProviderEZTV
 from TorrentProviderTPB import TorrentProviderTPB

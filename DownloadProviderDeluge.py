@@ -1,3 +1,7 @@
+
+# Connection to Deluge
+#
+
 import logging
 from DownloadProvider import DownloadProvider
 from multiprocessing import Process, Queue

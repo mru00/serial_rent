@@ -1,3 +1,6 @@
+
+# Interface to EZTV.it
+
 import re
 from TorrentProvider import TorrentProvider
 from BeautifulSoup import BeautifulSoup

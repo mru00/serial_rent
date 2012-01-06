@@ -1,3 +1,8 @@
+
+# Base class for download providers. 
+# A download provider is a bittorrent client.
+
+
 import logging
 
 log = logging.getLogger()
