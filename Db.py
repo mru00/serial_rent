@@ -10,10 +10,12 @@ import logging.handlers
 
 db = None
 
+log = logging.getLogger("Db")
 
 def update_schema(db):
   def v0():
-    db.execute('''
+    with db:
+      db.executescript('''
     create table 
       series
       (tvdb_series text,
@@ -21,10 +23,8 @@ def update_schema(db):
        eztv_name text,
        series_added timestamp DEFAULT CURRENT_TIMESTAMP, 
        PRIMARY KEY(tvdb_series)
-      )
-    ''');
+      );
 
-    db.execute('''
     create table 
       episodes
        (tvdb_series integer,
@@ -37,28 +37,43 @@ def update_schema(db):
         episode_added timestamp DEFAULT CURRENT_TIMESTAMP,
         state text DEFAULT "new",
         PRIMARY KEY(tvdb_series, tvdb_episode)
-       )
-    ''')
+       );
 
-    db.execute("CREATE TABLE IF NOT EXISTS debug(date text, loggername text, srclineno integer, func text, level text, msg text)")
+    CREATE TABLE IF NOT EXISTS debug(date text, loggername text, srclineno integer, func text, level text, msg text);
 
 
-    db.execute('''
     CREATE TABLE 
      config
       (download_dir text, 
        completed_dir text, 
        sorted_dir text
-      )''')
+      );
 
-    db.execute('''
     INSERT INTO config
     (download_dir)
-    VALUES (NULL)
+    VALUES (NULL);
+    ''')
+
+  def v1():
+    import tvdb
+    import json
+    def _get_meta(tvdb_episode):
+      try:
+        return json.dumps(tvdb.get_episode(int(tvdb_episode)))
+      except Exception as exc:
+        return None
+    with db:
+      db.create_function("get_meta", 1, _get_meta)
+      db.executescript('''
+    ALTER TABLE episodes
+    ADD COLUMN meta9 text;
+
+    UPDATE episodes
+    SET meta9 = ( get_meta(tvdb_episode) )
     ''')
 
 
-  updates = [v0]
+  updates = [v0, v1]
 
   r = db.execute('''
     SELECT version
@@ -67,12 +82,14 @@ def update_schema(db):
   v = r.fetchone()['version']
 
   while v < len(updates):
+    log.info("updating database to version %d" %(v+1,))
     updates[v]()
     v += 1
     db.execute('''
       UPDATE schema_version
       SET version = ?''', (v,))
     db.commit()
+  log.info("update database complete")
 
 
 def get_db():

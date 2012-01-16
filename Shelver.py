@@ -22,9 +22,9 @@ def clean_fn(filename):
 
 def get_file(episode_descriptor):
 
-  download_dir = Db.get_config('completed_dir') 
+  dir = Db.get_config('completed_dir') 
   filelist = []
-  for (a,b,c) in os.walk(download_dir):
+  for (a,b,c) in os.walk(dir):
     for f in c:
       filelist.append((f,a))
 

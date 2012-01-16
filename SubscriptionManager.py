@@ -48,9 +48,14 @@ class SubscriptionManager:
         meta = tvdb.get_episode(tvdb_episode)
       self.db.execute('''
       insert into episodes
-      (tvdb_series, tvdb_episode, episode_name, season_number, episode_number)
+      (tvdb_series, 
+       tvdb_episode, 
+       episode_name, 
+       season_number, 
+       episode_number,
+       aired timestamp)
       VALUES
-      (?,?,?,?,?)''', (tvdb_series, tvdb_episode, meta['name'], meta['season_number'], meta['episode_number'] ) )
+      (?,?,?,?,?)''', (tvdb_series, tvdb_episode, meta['name'], meta['season_number'], meta['episode_number'], meta['first_aired'] ) )
       self.db.commit()
     except Exception, e:
       log.error(repr(e)+tvdb_series + "/" + tvdb_episode)
@@ -114,5 +119,7 @@ def getSubscriptionManager():
 
 if __name__ == "__main__":
   s = getSubscriptionManager()
-  s.add_series("asdf")
+  archer = '110381'
+  print s.get_series_details(archer)
+  print s.get_episodes(arches)
 

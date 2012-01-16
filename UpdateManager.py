@@ -43,7 +43,7 @@ class UpdateManager():
         season_number = episode['season_number']
         episode_number = episode['episode_number']
 
-        if episode['state'] != "new":
+        if episode['state'] not in ["new", "no torrent found"]:
           continue
 
         try:
