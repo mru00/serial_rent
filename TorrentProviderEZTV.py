@@ -8,11 +8,20 @@ from EpisodeScorer import score
 import urllib2, urllib
 import logging
 import difflib
+import SubscriptionManager
 
 log = logging.getLogger("TorrentProviderEZTV")
 
 class TorrentProviderEZTV (TorrentProvider):
-  def getTorrent(self, episode_descriptor):
+
+  def getEZTV_series_page(self, episode_descriptor):
+
+    subman = SubscriptionManager.getSubscriptionManager()
+    
+    sd = subman.get_series_details(episode_descriptor.tvdb_series)
+    if sd["eztv_url"]:
+      log.info("using cached eztv url: %s" % sd["eztv_url"])
+      return sd["eztv_url"]
 
     page = urllib2.urlopen("http://eztv.it/showlist/")
     soup = BeautifulSoup(page)
@@ -34,6 +43,14 @@ class TorrentProviderEZTV (TorrentProvider):
       log.error("series " + name + " not found on eztv")
     s = series[cm[0]]
     log.info("chosen %s[%s] as series name" %(cm[0], s))
+
+    subman.set_series_detail(episode_descriptor.tvdb_series, "eztv_url", s)
+    return s
+
+  def getTorrent(self, episode_descriptor):
+
+
+    s = self.getEZTV_series_page(episode_descriptor)
 
     page = urllib2.urlopen("http://eztv.it" + s)
     soup = BeautifulSoup(page)

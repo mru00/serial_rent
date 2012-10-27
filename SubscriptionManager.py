@@ -41,6 +41,7 @@ class SubscriptionManager:
     VALUES
     (?,?,?)''' ,(tvdb_key,meta['name'], re.sub('[tT]he (.*)', r'\1, The', meta['name'])))
     self.db.commit()
+    log.info("added series %s" %(meta['name'], ))
 
   def add_episode(self, tvdb_series, tvdb_episode, meta = None):
     try:
@@ -53,12 +54,13 @@ class SubscriptionManager:
        episode_name, 
        season_number, 
        episode_number,
-       aired timestamp)
+       aired)
       VALUES
-      (?,?,?,?,?)''', (tvdb_series, tvdb_episode, meta['name'], meta['season_number'], meta['episode_number'], meta['first_aired'] ) )
+      (?,?,?,?,?,?)''', (tvdb_series, tvdb_episode, meta['name'], meta['season_number'], meta['episode_number'], meta['first_aired'] ) )
       self.db.commit()
+      log.info("added episode %s" %(meta['name'], ))
     except Exception, e:
-      log.error(repr(e)+tvdb_series + "/" + tvdb_episode)
+      log.error("%s[%s] / %d" %(str(e), tvdb_series, tvdb_episode))
 
   def get_series(self):
     return map(self._make_dict, self.db.execute('''
@@ -76,6 +78,15 @@ class SubscriptionManager:
     WHERE tvdb_series = ?''', 
     (tvdb_series,))
 
+    self.db.commit()
+
+  def set_episode_detail(self, tvdb_series, tvdb_episode, field, value):
+    assert re.match(r'\w+', field)
+    self.db.execute('''
+    UPDATE episodes
+    SET ''' + field + ''' = ?
+    WHERE tvdb_series = ? and tvdb_episode = ?''',
+    (value, tvdb_series, tvdb_episode))
     self.db.commit()
 
   def get_series_details(self, tvdb_series):

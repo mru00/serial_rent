@@ -32,6 +32,7 @@ urls = (
     r'/updates', 'updates',
     r'/updates/download', 'updates_download',
     r'/updates/move', 'updates_move',
+    r'/updates/search_torr', 'search_torr',
     r'/config/(\w+)', 'config_get',
     r'/config/(\w+)/(.+)', 'config_post',
     r'/html/(.*)', 'html',
@@ -42,7 +43,7 @@ app = web.application(urls, globals())
 
 class subscriptions:
   def GET(self):
-    return json.dumps(getSubscriptionManager().get_series())
+    return json.dumps({"subscriptions": getSubscriptionManager().get_series()})
   
 class subscription:
   def GET(self, sub):
@@ -92,14 +93,23 @@ class updates_move:
     up.move_downloaded()
     return json.dumps(None)
 
+class search_torr:
+  def GET(self):
+    up = getUpdateManager()
+    up.search_torr()
+    return json.dumps(None)
+
 class config_get:
   def GET(self, key):
     log.info("get config: " + key)
-    return json.dumps(Db.get_config(key))
+    web.header('Content-type', "application/json")
+    return json.dumps({"value": Db.get_config(key)})
 
 class config_post:
   def POST(self, key, value):
-    Db.set_config(key, urllib.unquote(value))
+    unquoted = urllib.unquote(value)
+    Db.set_config(key, unquoted)
+    log.info("setting config value '%s' to '%s'" % (str(key), str(unquoted)))
     return json.dumps(None)
 
 class redirect:
@@ -110,7 +120,8 @@ class redirect:
 class logg:
   def GET(self):
     db = get_db()
-    return json.dumps([ x for x in db.execute('SELECT * FROM debug') ])
+    web.header('Content-type', "application/json")
+    return json.dumps({"log": [ x for x in db.execute('SELECT * FROM debug') ]})
 class html:
   def GET(self, name):
     if not name:

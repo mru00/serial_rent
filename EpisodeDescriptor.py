@@ -10,7 +10,8 @@ class EpisodeDescriptor:
 
 
 class SimpleEpisodeDescriptor (EpisodeDescriptor):
-  def __init__ (self, series_name, season_number, episode_number, meta = None):
+  def __init__ (self, tvdb_series, series_name, season_number, episode_number, meta = None):
+    self.tvdb_series = tvdb_series
     self.series_name = series_name
     self.season_number = season_number
     self.episode_number = episode_number

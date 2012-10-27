@@ -73,7 +73,20 @@ def update_schema(db):
     ''')
 
 
-  updates = [v0, v1]
+  def v2():
+    with db:
+      db.executescript('''
+    ALTER TABLE episodes
+    ADD COLUMN aired timestamp;
+    ''')
+
+  def v3():
+    with db:
+      db.executescript('''
+    ALTER TABLE series
+    ADD COLUMN eztv_url;
+    ''')
+  updates = [v0, v1, v2, v3]
 
   r = db.execute('''
     SELECT version

@@ -26,41 +26,58 @@
         margin: 1em;
         padding: 1em;
       }
+      .block h2 {
+        cursor: pointer;
+      }
+      .config-desc {
+        width: 9em;
+        float: left;
+      }
+      .magnet-link {
+        font-size: 70%;
+      }
     </style>
   </head>
   <body>
     <h1>series download manager</h1>
+    <a href="https://github.com/mru00/serial_rent">https://github.com/mru00/serial_rent</a>
 
     <div class="block">
-      <h2>Tasks</h2>
+      <a id="tasks"><h2 id="tasks-title">Tasks</h2></a>
+      <div id="tasks-body">
       <ul>
-        <li><a href="" id="doUpdate">update database</a>
-        <li><a href="" id="doDownload">download updates</a>
-        <li><a href="" id="doMove">move downloaded</a>
+        <li><a href="#tasks" id="doUpdate">sync with tvdb</a>
+        <li><a href="#tasks" id="doSearchTorrents">search for torrents</a>
+        <li><a href="#tasks" id="doDownload">download updates</a>
+        <li><a href="#tasks" id="doMove">move downloaded</a>
       </ul>
+    </div>
     </div>
 
     <div class="block">
-      <h2>Config</h2>
+      <h2 id="config-title">Config</h2>
+      <div id="config-body">
       <form id="form_download_dir">
-        Download dir:
+        <span class="config-desc">Download dir:</span>
         <input type="text" width="80" id="download_dir"/>
         <input type="submit" value="set"/>
       </form>
       <form id="form_completed_dir">
-        Completed dir:
+        <span class="config-desc">Completed dir:</span>
         <input type="text" width="35" id="completed_dir"/>
         <input type="submit" value="set"/>
       </form>
       <form id="form_sorted_dir">
-        Sorted dir:
+        <span class="config-desc">Sorted dir:</span>
         <input type="text" width="35" id="sorted_dir"/>
         <input type="submit" value="set"/>
       </form>
     </div>
+    </div>
 
     <div class="block">
-      <h2>Search for series on thetvdb.com</h2>
+      <h2 id="search-title">Search for series on thetvdb.com</h2>
+      <div id="search-body">
       <form id="form_search"> 
         <input type="text" id="search_text"/> 
         <input type="submit" value="Search"/>
@@ -74,6 +91,7 @@
         </table>
       </div>
     </div>
+    </div>
 
     <div class="block">
       <h2>Subscriptions</h2>
@@ -86,6 +104,7 @@
 
         <h3 id="heading_details">Details</h3>
 
+        <img id="series_img" src=""></img>
         <form id="form_eztv_name">
           EZTV Name:
           <input type="text" id="eztv_name"/>
@@ -94,7 +113,7 @@
 
         <h3>Episodes</h3>
         <table>
-          <thead><th>season</th><th>episode</th><th>name</th><th>status</th><th>actions</th><th>details</th></thead>
+          <thead><th>s</th><th>e</th><th>aired</th><th>name</th><th>status</th><th>actions</th><th>details</th></thead>
           <tbody id="episodes"></tbody>
         </table>
       </div>
@@ -113,7 +132,7 @@
       function updateLog() {
         $.getJSON('/log', function(data) {
           var items = [];
-          $.each(data, function(key, val) {
+          $.each(data["log"], function(key, val) {
             items.push('<li>' + val);
           });
           $("#log").html(items.join(''));
@@ -132,6 +151,20 @@
         $("#episode_details_" + id).toggle();
       }
 
+      function magnetTitle(link) {
+        var parts = link.split("&");
+        var dn = "";
+        for (part in parts) {
+          kv = parts[part].split("=");
+          if (kv[0] == "dn") {
+            return kv[1];
+          }
+        }
+        return "";
+      }
+      function magnetLink(link) {
+        return ' <a class="magnet-link" href="'+link+'">'+magnetTitle(link)+'</a>';
+      }
       function showDetails(id) {
         if (id == null) {
           $("#episodes").html('');
@@ -139,7 +172,7 @@
           $.current_series = null;
         }
         else {
-          $("#details").show();
+          $("#details").hide();
 
           $.current_series = id;
           function onRecvEpisodes(data) {
@@ -150,10 +183,11 @@
 
               items.push(tr([val.season_number, 
               val.episode_number, 
+              (val.aired ? val.aired.split(" ")[0]: ""),
               val.episode_name, 
-              val.state, 
-              button('reset', 'resetEpisode('+val.tvdb_episode+')'),
-              button('toggle', 'toggleDetails('+val.tvdb_episode+')') + 
+              val.state + (val.torrent_name ? magnetLink(val.torrent_name) : ""), 
+              button('reset&nbsp;state', 'resetEpisode('+val.tvdb_episode+')'),
+              button('details', 'toggleDetails('+val.tvdb_episode+')') + 
               '<table id="episode_details_'+val.tvdb_episode+'" style="display:none;">'+details.join('')+'</table>'
               ]));
             });
@@ -170,6 +204,8 @@
             $("#heading_details").html('Details for ' + data + button('x', 'showDetails(null)'));
           });
           $.getJSON('/subscription/' + id + '/episodes', onRecvEpisodes);
+          $("#series_img").attr("src", "http://thetvdb.com/banners/_cache/graphical/"+$.current_series+"-g7.jpg");
+          $("#details").show("normal");
         }
       }
 
@@ -183,7 +219,7 @@
       function getSubscriptions() {
         function onRecvSubs(data) {
           var items = [];
-          $.each(data, function(key, val) {
+          $.each(data["subscriptions"], function(key, val) {
             details = []
             for (var key in val) { details.push(tr([key, val[key]])); }
             id = val.tvdb_series;
@@ -248,7 +284,7 @@
             return false;
           });
           $.getJSON('/config/'+value, function(data) {
-            $('#'+value).val(data);
+            $('#'+value).val(data["value"]);
           });
         });
 
@@ -268,6 +304,14 @@
           $.getJSON('/updates/download', function(data) {});
           return false;
         });
+        $("#doSearchTorrents").click(function() {
+          showDetails(null);
+          $.getJSON('/updates/search_torr', function(data) {});
+          return false;
+        });
+        $("#search-title").click(function() { $("#search-body").toggle("normal"); });
+        $("#config-title").click(function() { $("#config-body").toggle("normal"); });
+        $("#tasks-title").click(function() { $("#tasks-body").toggle("normal"); });
 
         showDetails(null);
         window.setInterval(updateLog, 10000);

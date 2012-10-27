@@ -33,6 +33,37 @@ class UpdateManager():
       for e in new_episodes:
         self.subs.add_episode(i, e['id'], e)
 
+  def search_torr(self):
+    to = TorrentProvider.getProvider()
+
+    for series in self.subs.get_series():
+      for episode in self.subs.get_episodes(series['tvdb_series']):
+        series_name = series['series_name']
+        season_number = episode['season_number']
+        episode_number = episode['episode_number']
+
+        if episode['state'] not in ["new", "no torrent found"]:
+          continue
+
+        try:
+          ds = SimpleEpisodeDescriptor(
+              series['tvdb_series'],series_name, 
+              int(season_number), 
+              int(episode_number), episode)
+
+          try:
+            magnet = to.getTorrent(ds)
+            if not magnet:
+              raise RuntimeError("episode not found: " + str(ds))
+            self.subs.set_episode_detail(episode['tvdb_series'], 
+                episode['tvdb_episode'], "torrent_name", magnet)
+          except Exception as ex:
+            raise
+
+        except Exception as ex:
+
+          log.warn("failed to find torrent for %s/%s/%s: %s" % (series_name, season_number, episode_number, format_exc(ex)))
+
   def download_new(self):
     dl = DownloadProvider.getProvider()
     to = TorrentProvider.getProvider()
@@ -47,7 +78,8 @@ class UpdateManager():
           continue
 
         try:
-          ds = SimpleEpisodeDescriptor(series_name, 
+          ds = SimpleEpisodeDescriptor(
+              series['tvdb_series'],series_name, 
               int(season_number), 
               int(episode_number), episode)
 

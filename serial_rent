@@ -6,12 +6,19 @@
 # right now 
 
 import logging
-import sys
+import sys, os
 from traceback import format_exc
 
 logging.basicConfig(level=logging.DEBUG)
 from Server import app
 
+print "do not use this program. call 'python Server.py' instead."
+os.execlp("python", "python", "./Server.py")
+sys.exit(1)
+
+if len(sys.argv) < 2:
+  print "usage: serial_rent [server|client|standalone]"
+  sys.exit(1)
 
 args = sys.argv[1:]
 args.reverse()
